@@ -7,7 +7,7 @@ import {
 import "./App.css";
 import Home from "./components/home";
 import Login from "./components/login";
-
+import NavBar from "./components/navBar";
 const isAuthenticated = () => {
   const authenticationCookie = document.cookie.includes("authorization");
   const expirationDateValid = true;
@@ -18,6 +18,7 @@ function App() {
   return (
     <Router>
       <div>
+        {isAuthenticated() && <NavBar />}
         <Routes>
           <Route
             path="/"
@@ -25,8 +26,12 @@ function App() {
               isAuthenticated() ? <Home /> : <Navigate to="/login" replace />
             }
           />
-          <Route path="/login" element={<Login />} />
-          <Route path="/home" element={<Home />} />
+          <Route
+            path="/login"
+            element={
+              !isAuthenticated() ? <Login /> : <Navigate to="/" replace />
+            }
+          />
         </Routes>
       </div>
     </Router>

@@ -10,6 +10,7 @@ import {
 import { createTheme } from "@mui/material/styles";
 import { makeStyles } from "@mui/styles";
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 const theme = createTheme();
 
@@ -37,14 +38,42 @@ const Login = () => {
   const classes = useStyles();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Add your login logic here
-    console.log("Email:", email);
-    console.log("Password:", password);
-  };
+    try {
+      const response = await fetch("http://localhost:3000/api/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email, password }),
+      });
 
+      if (response.ok) {
+        const data = await response.json();
+        if (data.token) {
+          // Save token in cookies
+          document.cookie = `authorization=${data.token}`;
+          navigate("/");
+        }
+      } else {
+        // Handle other status codes
+        let errorMessage = "Error de servidor";
+        if (response.status === 401) {
+          errorMessage = "Credenciales inválidas";
+        } else if (response.status === 500) {
+          errorMessage = "Error interno del servidor";
+        }
+        setError(errorMessage);
+      }
+    } catch (error) {
+      console.error("Error:", error);
+      setError("Ocurrió un error al procesar la solicitud");
+    }
+  };
   return (
     <ThemeProvider theme={theme}>
       <Container component="main" maxWidth="xs">
@@ -80,6 +109,7 @@ const Login = () => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
+              {error && <div className="alert alert-danger">{error}</div>}
               <Button
                 type="submit"
                 fullWidth
